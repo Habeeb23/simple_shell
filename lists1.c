@@ -1,147 +1,122 @@
 #include "shell.h"
 
+/**
+ * list_len - determines length of linked list
+ * @h: pointer to first node
+ *
+ * Return: size of list
+ */
+size_t list_len(const list_t *h)
+{
+	size_t i = 0;
 
+	while (h)
+	{
+		h = h->next;
+		i++;
+	}
+	return (i);
+}
 
 /**
+ * list_to_strings - returns an array of strings of the list->str
+ * @head: pointer to first node
  *
- *  * interactive - returns true if shell is interactive mode
- *
- *   * @info: struct address
- *
- *    *
- *
- *     * Return: 1 if interactive mode, 0 otherwise
- *
- *      */
-
-int interactive(info_t *info)
-
+ * Return: array of strings
+ */
+char **list_to_strings(list_t *head)
 {
+	list_t *node = head;
+	size_t i = list_len(head), j;
+	char **strs;
+	char *str;
 
-		return (isatty(STDIN_FILENO) && info->readfd <= 2);
+	if (!head || !i)
+		return (NULL);
+	strs = malloc(sizeof(char *) * (i + 1));
+	if (!strs)
+		return (NULL);
+	for (i = 0; node; node = node->next, i++)
+	{
+		str = malloc(_strlen(node->str) + 1);
+		if (!str)
+		{
+			for (j = 0; j < i; j++)
+				free(strs[j]);
+			free(strs);
+			return (NULL);
+		}
 
+		str = _strcpy(str, node->str);
+		strs[i] = str;
+	}
+	strs[i] = NULL;
+	return (strs);
 }
 
 
-
 /**
+ * print_list - prints all elements of a list_t linked list
+ * @h: pointer to first node
  *
- *  * is_delim - checks if character is a delimeter
- *
- *   * @c: the char to check
- *
- *    * @delim: the delimeter string
- *
- *     * Return: 1 if true, 0 if false
- *
- *      */
-
-int is_delim(char c, char *delim)
-
+ * Return: size of list
+ */
+size_t print_list(const list_t *h)
 {
+	size_t i = 0;
 
-		while (*delim)
-
-					if (*delim++ == c)
-
-									return (1);
-
-			return (0);
-
+	while (h)
+	{
+		_puts(convert_number(h->num, 10, 0));
+		_putchar(':');
+		_putchar(' ');
+		_puts(h->str ? h->str : "(nil)");
+		_puts("\n");
+		h = h->next;
+		i++;
+	}
+	return (i);
 }
 
-
-
 /**
+ * node_starts_with - returns node whose string starts with prefix
+ * @node: pointer to list head
+ * @prefix: string to match
+ * @c: the next character after prefix to match
  *
- *  *_isalpha - checks for alphabetic character
- *
- *   *@c: The character to input
- *
- *    *Return: 1 if c is alphabetic, 0 otherwise
- *
- *     */
-
-
-
-int _isalpha(int c)
-
+ * Return: match node or null
+ */
+list_t *node_starts_with(list_t *node, char *prefix, char c)
 {
+	char *p = NULL;
 
-		if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
-
-					return (1);
-
-			else
-
-						return (0);
-
+	while (node)
+	{
+		p = starts_with(node->str, prefix);
+		if (p && ((c == -1) || (*p == c)))
+			return (node);
+		node = node->next;
+	}
+	return (NULL);
 }
 
-
-
 /**
+ * get_node_index - gets the index of a node
+ * @head: pointer to list head
+ * @node: pointer to the node
  *
- *  *_atoi - converts a string to an integer
- *
- *   *@s: the string to be converted
- *
- *    *Return: 0 if no numbers in string, converted number otherwise
- *
- *     */
-
-
-
-int _atoi(char *s)
-
+ * Return: index of node or -1
+ */
+ssize_t get_node_index(list_t *head, list_t *node)
 {
+	size_t i = 0;
 
-		int i, sign = 1, flag = 0, output;
-
-			unsigned int result = 0;
-
-
-
-				for (i = 0;  s[i] != '\0' && flag != 2; i++)
-
-						{
-
-									if (s[i] == '-')
-
-													sign *= -1;
-
-
-
-											if (s[i] >= '0' && s[i] <= '9')
-
-														{
-
-																		flag = 1;
-
-																					result *= 10;
-
-																								result += (s[i] - '0');
-
-																										}
-
-													else if (flag == 1)
-
-																	flag = 2;
-
-														}
-
-
-
-					if (sign == -1)
-
-								output = -result;
-
-						else
-
-									output = result;
-
-
-
-							return (output);
-
+	while (head)
+	{
+		if (head == node)
+			return (i);
+		head = head->next;
+		i++;
+	}
+	return (-1);
 }
