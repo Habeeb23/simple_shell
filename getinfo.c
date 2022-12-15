@@ -1,147 +1,74 @@
 #include "shell.h"
 
-
-
 /**
- *
- *  * interactive - returns true if shell is interactive mode
- *
- *   * @info: struct address
- *
- *    *
- *
- *     * Return: 1 if interactive mode, 0 otherwise
- *
- *      */
-
-int interactive(info_t *info)
-
+ * clear_info - initializes info_t struct
+ * @info: struct address
+ */
+void clear_info(info_t *info)
 {
-
-		return (isatty(STDIN_FILENO) && info->readfd <= 2);
-
+	info->arg = NULL;
+	info->argv = NULL;
+	info->path = NULL;
+	info->argc = 0;
 }
 
-
-
 /**
- *
- *  * is_delim - checks if character is a delimeter
- *
- *   * @c: the char to check
- *
- *    * @delim: the delimeter string
- *
- *     * Return: 1 if true, 0 if false
- *
- *      */
-
-int is_delim(char c, char *delim)
-
+ * set_info - initializes info_t struct
+ * @info: struct address
+ * @av: argument vector
+ */
+void set_info(info_t *info, char **av)
 {
+	int i = 0;
 
-		while (*delim)
+	info->fname = av[0];
+	if (info->arg)
+	{
+		info->argv = strtow(info->arg, " \t");
+		if (!info->argv)
+		{
 
-					if (*delim++ == c)
+			info->argv = malloc(sizeof(char *) * 2);
+			if (info->argv)
+			{
+				info->argv[0] = _strdup(info->arg);
+				info->argv[1] = NULL;
+			}
+		}
+		for (i = 0; info->argv && info->argv[i]; i++)
+			;
+		info->argc = i;
 
-									return (1);
-
-			return (0);
-
+		replace_alias(info);
+		replace_vars(info);
+	}
 }
 
-
-
 /**
- *
- *  *_isalpha - checks for alphabetic character
- *
- *   *@c: The character to input
- *
- *    *Return: 1 if c is alphabetic, 0 otherwise
- *
- *     */
-
-
-
-int _isalpha(int c)
-
+ * free_info - frees info_t struct fields
+ * @info: struct address
+ * @all: true if freeing all fields
+ */
+void free_info(info_t *info, int all)
 {
-
-		if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
-
-					return (1);
-
-			else
-
-						return (0);
-
-}
-
-
-
-/**
- *
- *  *_atoi - converts a string to an integer
- *
- *   *@s: the string to be converted
- *
- *    *Return: 0 if no numbers in string, converted number otherwise
- *
- *     */
-
-
-
-int _atoi(char *s)
-
-{
-
-		int i, sign = 1, flag = 0, output;
-
-			unsigned int result = 0;
-
-
-
-				for (i = 0;  s[i] != '\0' && flag != 2; i++)
-
-						{
-
-									if (s[i] == '-')
-
-													sign *= -1;
-
-
-
-											if (s[i] >= '0' && s[i] <= '9')
-
-														{
-
-																		flag = 1;
-
-																					result *= 10;
-
-																								result += (s[i] - '0');
-
-																										}
-
-													else if (flag == 1)
-
-																	flag = 2;
-
-														}
-
-
-
-					if (sign == -1)
-
-								output = -result;
-
-						else
-
-									output = result;
-
-
-
-							return (output);
-
+	ffree(info->argv);
+	info->argv = NULL;
+	info->path = NULL;
+	if (all)
+	{
+		if (!info->cmd_buf)
+			free(info->arg);
+		if (info->env)
+			free_list(&(info->env));
+		if (info->history)
+			free_list(&(info->history));
+		if (info->alias)
+			free_list(&(info->alias));
+		ffree(info->environ);
+			info->environ = NULL;
+		bfree((void **)info->cmd_buf);
+		if (info->readfd > 2)
+			close(info->readfd);
+		_putchar(BUF_FLUSH);
+	}
 }
